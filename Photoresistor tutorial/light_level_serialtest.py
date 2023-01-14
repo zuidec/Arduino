@@ -20,7 +20,7 @@ while True:
             buffer = arduino.read()             #
             var += buffer.decode('ascii')       # Convert ascii from arduino into utf-8 for python3
         if var != "":               # Check if there is data in var to be output
-            print('\r',var, end="") # Output var
+            print('\r     \r',var, end="") # Output var
             var = ""                # Reset var and buffer
             buffer = b''            #
             
