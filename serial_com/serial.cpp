@@ -3,15 +3,21 @@
 
 int main()
 {
-	std::ifstream arduino; // Create new filestream named arduino
+	HANDLE arduino; // Create new filestream named arduino
 	
 	try 
 	{
 		std::cout << "Attempting to connect to COM3..." << std::endl; 	// Attempt to connect to arduino
-		arduino.open("COM3",std::ios::in);						
+		arduino = CreateFile ("COM3",
+				GENERIC_READ | GENERIC_WRITE,
+				0,
+				0,
+				OPEN_EXISTING,
+				FILE_FLAG_OVERLAPPED,
+				0);						
 
-		if(arduino.fail()) throw -1;
-		else if (arduino.is_open()) std::cout << "Successfully connected on COM3." << std::endl;
+		if(arduino == INVALID_HANDLE_VALUE) throw -1;
+		else std::cout << "Successfully connected on COM3." << std::endl;
 	}
 	catch (...)
 	{
@@ -20,6 +26,6 @@ int main()
 		return -1;									// 
 	}
 	
-	arduino.close();	//Terminate arduino filestream before closing
+	//arduino.close();	//Terminate arduino filestream before closing
 	return 0;
 }
