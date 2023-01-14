@@ -1,20 +1,25 @@
-#include <stdio.h>
-#include <bios.h>
+#include <iostream>
+#include <fstream>
 
-void main()
+int main()
 {
-	char i = 0, title[] = "Hello world";
-	unsigned status;
+	std::ifstream arduino; // Create new filestream named arduino
+	
+	try 
+	{
+		std::cout << "Attempting to connect to COM3..." << std::endl; 	// Attempt to connect to arduino
+		arduino.open("COM3",std::ios::in);						
 
-	status = _bios_serialcom(_COM_INIT, 0, _COM_9600 | _COM_CHR8 | _COM_STOP1 | _COM_NOPARITY);
-
-	if(status &0x100)
-		while (title[i])
-		{
-			_bios_serialcom(_COM_SEND, 0, title[i]);
-			putchar(title[i]);
-			i++;
-
-		}
-
+		if(arduino.fail()) throw -1;
+		else if (arduino.is_open()) std::cout << "Successfully connected on COM3." << std::endl;
+	}
+	catch (...)
+	{
+		std::cout << "Error connecting on COM3, exiting now" << std:: endl;	// Catch exception and exit if
+		arduino.close();							// unsuccessful
+		return -1;									// 
+	}
+	
+	arduino.close();	//Terminate arduino filestream before closing
+	return 0;
 }
