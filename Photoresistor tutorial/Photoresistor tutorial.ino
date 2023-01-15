@@ -35,7 +35,7 @@ void loop(){
   else if (value < 10){Serial.print("00"); Serial.print(value);}                  ///
   */
   
-  Serial.print(value); Serial.write('\r'); //Output current light reading from photoresistor to serial monitor, then print carriage return for receiving program to terminate reading
+  Serial.print(value); Serial.write('\0'); //Output current light reading from photoresistor to serial monitor, then print carriage return for receiving program to terminate reading
   delay(500); //Small delay
  }
 }

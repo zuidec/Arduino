@@ -9,7 +9,7 @@ time.sleep(2)
 
 var = ""        # Initialize variables with the correct type before using in main loop
 buffer = b''    #
-endByte = b'\r' #
+endByte = b'\0' #
 
 # Output a label before moving into main loop where data is overwritten with a carriage return
 print("The current light level is: ")
