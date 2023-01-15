@@ -4,45 +4,45 @@
 #include <string>
 
 #define ERROR_HANDLE_EOF 38
+#define ERROR_IO_PENDING 997
 
-void FlushBuffer(char*, int);
-char* COMPortName = "COM3";
-DCB port;
+void FlushBuffer(char*, int) ;
 
 int main()
 {
 	HANDLE arduino; // Create new filestream named arduino
 	DWORD comError; // DWORD to use with GetLastError()
+	char* COMPortName = "COM3";
+	DCB port; // Device control object used to set port properties
 	
-	
+	OVERLAPPED arduino_OVERLAP;			// When using asynchronous IO, ReadFile() requires the last argument to be a point to an overlapped object, which is declared here. We are required to set hEvent, Offset, and OffsetHigh, but there are more properties
+	arduino_OVERLAP.hEvent = NULL;		//
+	arduino_OVERLAP.Offset = 0;			//
+	arduino_OVERLAP.OffsetHigh = 0;		//
+
+	COMMTIMEOUTS arduinoTimeouts;					// Create a timeout profile with the following parameters
+	arduinoTimeouts.ReadIntervalTimeout = 1;		//
+	arduinoTimeouts.ReadTotalTimeoutConstant = 1;	//
+	arduinoTimeouts.ReadTotalTimeoutMultiplier = 1;	//
+	arduinoTimeouts.WriteTotalTimeoutConstant = 1;	//
+	arduinoTimeouts.WriteTotalTimeoutMultiplier = 1;//
+
 	try 
 	{
-		std::cout << "Attempting to connect to " << COMPortName << "..." << std::endl; 	// Attempt to connect to arduino
-		arduino = CreateFileA (COMPortName,			// COM port 3
+		std::cout << "Attempting to connect to " << COMPortName << "..." << std::endl; 	
+
+		arduino = CreateFileA (COMPortName,		// Set COM port to connect to
 				GENERIC_READ | GENERIC_WRITE,	// Open read and write
-				0,
+				0,								
 				NULL,
 				OPEN_EXISTING,					// Opens existing COM port
-				FILE_FLAG_OVERLAPPED,			// Was originally FILE_FLAG_OVERLAPPED, but using 0 prevents error 87 
+				FILE_FLAG_OVERLAPPED,			// Arduino uses FILE_FLAG_OVERLAPPED 
 				NULL);						
 
 		if(arduino == INVALID_HANDLE_VALUE) throw 'a'; // throw exception if handle is invalid
 		
 		std::cout << "Successfully connected on "<< COMPortName <<", attempting to configure port settings and timeouts...  " << std::endl;
 		
-		
-		COMMTIMEOUTS arduinoTimeouts;					// Create a timeout profile with the following parameters
-
-		arduinoTimeouts.ReadIntervalTimeout = 1;
-		arduinoTimeouts.ReadTotalTimeoutConstant = 1;
-		arduinoTimeouts.ReadTotalTimeoutMultiplier = 1;
-		arduinoTimeouts.WriteTotalTimeoutConstant = 1;
-		arduinoTimeouts.WriteTotalTimeoutMultiplier = 1;
-
-		
-		
-		
-
 		memset(&port, 0, sizeof(port));
 		port.DCBlength = sizeof(port);
 		if (!GetCommState(arduino, &port)) throw 'c';
@@ -55,7 +55,7 @@ int main()
 		Sleep(500);
 
 	}
-	catch (char a)
+	catch (char a) /// Catch errors related to connecting to COM port and exit
 	{
 		comError = GetLastError();
 		
@@ -69,11 +69,11 @@ int main()
 		CloseHandle(arduino);		// Close handle and exit																			
 		return -1;									 
 	}
-	catch (...)
+	catch (...)/// Catch other undefined errors and exit. Not currently used.
 	{
 		comError = GetLastError();
 		std::cout << "Other unknown error occurred, exiting now, error number: " << comError << std::endl;	// Catch exception and exit if
-		CloseHandle(arduino);																								// unsuccessful
+		CloseHandle(arduino);																				// unsuccessful
 		return -1;
 	}
 	
@@ -82,49 +82,49 @@ int main()
 
 	std::cout << std::endl << "Attempting to read data from " << COMPortName << "..." << std::endl << std::endl;
 	
-	OVERLAPPED arduino_OVERLAP;
+	
 
-	arduino_OVERLAP.hEvent = NULL;
-	arduino_OVERLAP.Offset = 0;
-	arduino_OVERLAP.OffsetHigh = 0;
+	BOOL EndOfFile = FALSE;				// Set an internal EndOfFile flag to use in the loop
 
-	BOOL EndOfFile = FALSE;
-
-	while (TRUE) /// Enter into main loop for receiving data from arduino
+	while (TRUE) // Enter into main loop for receiving data from arduino
 	{
-		// Attempt to read a line from arduino and store into the buffer
-		try
+		
+		try		// Attempt to read a line from arduino and store into the buffer
 		{
-			//std::cout << "In try block";
 			for (int i = 0; !EndOfFile; i++) // Set up loop to read until \r is found
-			{
-				
-				int returnValue; // Set up a variable to store the return value of ReadFile() function to check for a read error and throw exception
-				DWORD bytesRead; 
-				
-				
-				
-				returnValue = ReadFile(arduino, &buffer[i], 1, &bytesRead, &arduino_OVERLAP); // Read one byte at a time from arduino and store in buffer
-				//if (bytesRead == 0);
+			{				
+				DWORD bytesRead; // ReadFile requires a pointer to a DWORD to output bytes read. This will be set back to 0 if EOF is reached 
 					
-				//if (buffer[i] == '\r') buffer[i] = '\0';
-				//std::cout << buffer[i];
+				if (!ReadFile(arduino, &buffer[i], 1, &bytesRead, &arduino_OVERLAP)) // Read one byte at a time from arduino and store in buffer, ReadFile() returns 0 if there is a failure
+				{
+					comError = GetLastError();
 
-				if (returnValue == 0 && GetLastError()== ERROR_HANDLE_EOF) throw; // ReadFile() only returns 0 if it is unsuccessful
+					switch (comError)
+					{
+					case ERROR_IO_PENDING:		// We expect to occasionally have IO pending, so ignore
+						break;
+					case ERROR_HANDLE_EOF:		// We expect to occasionally read to the end of the buffer, so ignore
+						break;
+					default:					// For all other errors, we should throw an exception
+						throw comError;
+						break;
+
+					}
+
+				}
 				
-				if (buffer[i] == '\0') EndOfFile = true;
+				if (buffer[i] == '\0') EndOfFile = true; // Set EOF flag if terminating character is reached
 			}
 			if (buffer[0] != '\0')
 			{
 				std::cout << "\r                                                           \rThe current light level is: " << buffer;
-				FlushBuffer(&buffer[0], sizeof(buffer)); // Send the buffer to be set back to \0 in all positions
+				FlushBuffer(&buffer[0], sizeof(buffer));	// Send the buffer to be set back to \0 in all positions
 			}
 			EndOfFile = false;
 		}
-		catch (...)
+		catch (...) //Catch exceptions caused by ReadFile() and exit
 		{
-			 comError = GetLastError();
-			std::cout << "Error reading from " << COMPortName << ", exiting with error number " << comError << std::endl; // Output last error and exit 
+			std::cout << std::endl << "Error reading from " << COMPortName << ", exiting with error number " << comError << std::endl; // Output last error and exit 
 			CloseHandle(arduino);
 			return -1;
 		}
