@@ -33,3 +33,6 @@
 
 # Circuit diagram working files
 *.cddx
+
+# Visual studio folders
+.vs/
