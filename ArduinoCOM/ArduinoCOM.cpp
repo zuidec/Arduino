@@ -118,14 +118,14 @@ bool ArduinoCOM::ReadLine(std::string* Line)
 			if (!ReadFile(SerialPort, &buffer[i], 1, &bytesRead, /*&PortOverlap*/NULL)) // Read one byte at a time from arduino and store in buffer, ReadFile() returns 0 if there is a failure
 			{
 				COMError = GetLastError();
-
+				i--;
 				switch (COMError)
 				{
 				case ERROR_IO_PENDING:		// We expect to occasionally have IO pending, so ignore and take a pause
-					Sleep(200);
+					//Sleep(50);
 					break;
 				case ERROR_HANDLE_EOF:		// We expect to occasionally read to the end of the buffer, so ignore and take a pause
-					Sleep(200);
+					//Sleep(50);
 					break;
 				default:					// For all other errors, we should throw an exception
 					throw COMError;
@@ -135,7 +135,7 @@ bool ArduinoCOM::ReadLine(std::string* Line)
 
 			}
 
-			if (buffer[i] == '\0' && i > 0)
+			if (buffer[i] == '\n' && i > 0)
 			{
 				EndOfFile = true; // Set EOF flag if terminating character is reached
 				//std::cout << buffer;		// Used to debug buffer errors

@@ -17,6 +17,7 @@ class ArduinoCOM
 		void Read();
 		bool ReadLine(std::string *Line);
 		void Write();
+		void WriteLine();
 		void FlushBuffer();
 		//need to implement an isConnected()
 		
