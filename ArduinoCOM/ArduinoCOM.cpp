@@ -13,7 +13,7 @@ ArduinoCOM::~ArduinoCOM()
 
 void ArduinoCOM::Initialize()
 {
-	// When using asynchronous IO, ReadFile() requires the last argument to be a point to an overlapped object, which is declared here. We are required to set hEvent, Offset, and OffsetHigh, but there are more properties
+	// When using asynchronous IO, ReadFile() requires the last argument to be a pointer to an overlapped object, which is declared here. We are required to set hEvent, Offset, and OffsetHigh, but there are more properties
 	PortOverlap.hEvent = NULL;		//
 	PortOverlap.Offset = 0;			// Needed for asynchronous Read, not currently in use
 	PortOverlap.OffsetHigh = 0;		//
@@ -31,6 +31,8 @@ void ArduinoCOM::Initialize()
 	Port.DCBlength = sizeof(Port);		//
 
 	LastError = "";	// Start with an empty error
+	FlushBuffer(&ReadBuffer[0], sizeof(ReadBuffer));	// Clear buffer before we start reading
+	FlushBuffer(&WriteBuffer[0], sizeof(WriteBuffer));	// Clear buffer before we start writing
 }
 
 int ArduinoCOM::Connect(char* COMPortName, int BaudRate)
@@ -107,9 +109,6 @@ void ArduinoCOM::Read()
 bool ArduinoCOM::ReadLine(std::string* Line) // Takes a string pointer as argument to store the line to be read
 {
 	bool EndOfFile = false;		// Create an EOF flag to use in this function
-	FlushBuffer(&ReadBuffer[0], sizeof(ReadBuffer));	// Clear buffer before we start reading
-
-
 	try		
 	{
 		for (int i = 0; !EndOfFile&& i<sizeof(ReadBuffer); i++) // Set up loop to read until \n is found
@@ -168,7 +167,7 @@ bool ArduinoCOM::WriteLine(std::string* Line)
 	{ 
 		WriteBuffer[i] = Line->at(i);			// Write the data from the string pointer into local buffer
 	}
-	WriteBuffer[Line->size()] = '\0';			// Null terminate the buffer
+	WriteBuffer[Line->size()] = '\n';			// Null terminate the buffer
 	bytesToWrite = Line->size() +1;				// Set bytesToWrite equal to the size of Line +1 to accomodate for the addition of null terminator
 	
 	bytesWritten = 0;							// Reset the number of bytes written

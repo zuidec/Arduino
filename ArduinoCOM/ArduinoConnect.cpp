@@ -20,21 +20,20 @@ while (isConnected)
 {
 	
 	cout << "Enter message: ";
-	cin >> line;
+	std::getline(std::cin, line);
 	cout << endl;
 	//line += '\0';
-
+	//cout << line;
 	if (!arduino.WriteLine(&line))
 	{
 		cout << endl << "Error encountered: " << arduino.GetError() << endl;
 		return 1;
 	}
-	//Sleep(200);
+	Sleep(100);
 	line = "";
 	
 	if (!arduino.ReadLine(&line))
 	{
-		isConnected = false;
 		cout << endl << "Error encountered: " << arduino.GetError() << endl;
 		return 1;
 	}
