@@ -3,7 +3,13 @@
 
 ArduinoCOM::ArduinoCOM()
 {
-	
+	BaudRate = 9600;
+	COMPortName = "";
+
+	FlushBuffer(&ReadBuffer[0], sizeof(ReadBuffer));	// Clear buffer before we start reading
+	FlushBuffer(&WriteBuffer[0], sizeof(WriteBuffer));	// Clear buffer before we start writing
+
+	SetError("");	// Start with an empty error
 }
 
 ArduinoCOM::~ArduinoCOM()
@@ -30,16 +36,13 @@ void ArduinoCOM::Initialize()
 	memset(&Port, 0, sizeof(Port));		//
 	Port.DCBlength = sizeof(Port);		//
 
-	LastError = "";	// Start with an empty error
-	FlushBuffer(&ReadBuffer[0], sizeof(ReadBuffer));	// Clear buffer before we start reading
-	FlushBuffer(&WriteBuffer[0], sizeof(WriteBuffer));	// Clear buffer before we start writing
 }
 
-int ArduinoCOM::Connect(char* COMPortName, int BaudRate)
+int ArduinoCOM::Connect()
 {
 	Initialize();
 	CommDCBParameter = "baud=" + std::to_string(BaudRate) + " parity=n data=8 stop=1";	// Variable to store string containing baud, etc to build DCB with
-
+	std::cout << COMPortName << std::endl;
 	try 
 	{
 		SerialPort = CreateFileA (COMPortName,	// Set COM port to connect to
@@ -236,4 +239,32 @@ void ArduinoCOM::FlushBuffer(char *buffer, int bufferSize)
 	}
 
 	return;
+}
+
+bool ArduinoCOM::isValidPort(int COMPortNumber)
+{
+	
+	char testPort[12] = "\\\\.\\COM";
+	snprintf(testPort,sizeof(testPort),"\\\\.\\COM%d", COMPortNumber);
+	char* tempPort = COMPortName;
+	//std::cout << "DEBUG: char* testPort = \'" << testPort << "\'" << std::endl;
+	COMPortName = testPort;
+	if (Connect()==0) {
+		Disconnect();
+		COMPortName = tempPort;
+		return false;
+	}
+	else {
+		Disconnect();
+		COMPortName = tempPort;
+		return true;
+	}
+	
+}
+
+bool ArduinoCOM::isConnected()
+{
+	if (SerialPort == INVALID_HANDLE_VALUE) return false;
+	else return true;
+
 }

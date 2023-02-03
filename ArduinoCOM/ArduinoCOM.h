@@ -12,14 +12,17 @@ class ArduinoCOM
 		~ArduinoCOM();
 
 		void Disconnect();								// Basic functionality
-		int Connect(char* COMPortName, int BaudRate);	// Basic functionality
+		int Connect();									// Basic functionality
 		std::string GetError();							// Basic functionality
 		void ClearErrors();								// Basic functionality
 		void Read();									// Not implemented yet
 		bool ReadLine(std::string *Line);				// Basic functionality
 		void Write();									// Not implemented yet
-		bool WriteLine(std::string *Line);				// Not implemented yet
-		void isConnected();								// Not implemented yet
+		bool WriteLine(std::string *Line);				// Basic functionality
+		bool isConnected();								// Very basic, needs more implementation
+		bool isValidPort(int COMPortNumber);			// Check if the specified COM port is available/valid
+		int BaudRate;
+		char* COMPortName;
 		
 	private:
 		DWORD COMError;									// Variable to store the results of the windows GetLastError() as needed
