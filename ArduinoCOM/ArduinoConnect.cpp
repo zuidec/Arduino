@@ -10,7 +10,7 @@ int main()
 	bool isConnected = false;
 
 	cout << "Attempting to connect to arduino on COM3..." << endl;
-	if (arduino.Connect("COM3", 115200) == 0) cout << "Error encountered: " << arduino.GetError() << endl;
+	if (arduino.Connect("COM8", 115200) == 0) cout << "Error encountered: " << arduino.GetError() << endl;
 	else {
 		isConnected = true;
 		cout << "Connected on COM3, attempting to read from arduino..." << endl << endl;
