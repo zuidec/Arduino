@@ -3,8 +3,8 @@
 
 ArduinoCOM::ArduinoCOM()
 {
-	BaudRate = 9600;
-	COMPortName = "";
+	BaudRate = 9600;		// Use 9600 as a default baud rate
+	COMPortName = "";		// Set to empty to prevent random memory assignment
 
 	FlushBuffer(&ReadBuffer[0], sizeof(ReadBuffer));	// Clear buffer before we start reading
 	FlushBuffer(&WriteBuffer[0], sizeof(WriteBuffer));	// Clear buffer before we start writing
@@ -42,10 +42,10 @@ int ArduinoCOM::Connect()
 {
 	Initialize();
 	CommDCBParameter = "baud=" + std::to_string(BaudRate) + " parity=n data=8 stop=1";	// Variable to store string containing baud, etc to build DCB with
-	std::cout << COMPortName << std::endl;
+
 	try 
 	{
-		SerialPort = CreateFileA (COMPortName,	// Set COM port to connect to
+		SerialPort = CreateFileA (COMPortName,	// Set COM port to connect to. If the port is greater than 9, string should be formatted "\\\\.\\COM10" but this format is also valid for ports 1-9
 				GENERIC_READ | GENERIC_WRITE,	// Open read and write
 				0,								
 				NULL,
@@ -243,20 +243,25 @@ void ArduinoCOM::FlushBuffer(char *buffer, int bufferSize)
 
 bool ArduinoCOM::isValidPort(int COMPortNumber)
 {
-	
+	if (COMPortNumber < 0){
+		SetError("INVALID_PORT_NAME");									// Set an invalid port name error if value is less than 0
+		return false;
+	}
+
 	char testPort[12] = "\\\\.\\COM";
-	snprintf(testPort,sizeof(testPort),"\\\\.\\COM%d", COMPortNumber);
-	char* tempPort = COMPortName;
-	//std::cout << "DEBUG: char* testPort = \'" << testPort << "\'" << std::endl;
-	COMPortName = testPort;
-	if (Connect()==0) {
-		Disconnect();
-		COMPortName = tempPort;
+	snprintf(testPort,sizeof(testPort),"\\\\.\\COM%d", COMPortNumber);	// Add passed port number into string
+	char* tempPort = COMPortName;										// Store the current port so we can change it back later
+	
+	COMPortName = testPort;												// Set to our port to be tested
+	if (Connect()==0) {													// Attempt to connect
+		Disconnect();			
+		COMPortName = tempPort;											// Restore the port value and exit
+		SetError("INVALID_COM_PORT");
 		return false;
 	}
 	else {
 		Disconnect();
-		COMPortName = tempPort;
+		COMPortName = tempPort;											// Restore the port value and exit
 		return true;
 	}
 	
