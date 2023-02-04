@@ -7,12 +7,16 @@ int main()
 {
 	ArduinoCOM scanner;
 	cout << "Scanning COM ports..." << endl;
-	//cout << "Available COM ports:" << endl;
-	for (int i = 0; i < 20; i++)
-	{
-		if (scanner.isValidPort(i)) cout << "COM" << i << " AVAILABLE" << endl;
-		//else cout << " NOT AVAILABLE" << endl;
+	
+	scanner.ScanPorts();
 
+	cout << scanner.availablePorts.size() << " COM ports available:" << endl;
+
+	for (int i = 0; i < scanner.availablePorts.size(); i++)
+	{
+		cout << scanner.availablePorts[i] << "		";
 	}
+	cout << endl;
+
 	return 0;
 }

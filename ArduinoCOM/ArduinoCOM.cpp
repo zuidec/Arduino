@@ -273,3 +273,19 @@ bool ArduinoCOM::isConnected()
 	else return true;
 
 }
+
+void ArduinoCOM::ScanPorts()
+{
+	availablePorts.clear();		// Clear out the vector before we begin the scan
+
+	for (int i = 0; i <= 20; i++)	// Scan ports 0-20
+	{
+		if (isValidPort(i))			// Use isValidPort to let us know if something is there
+		{	
+			availablePorts.push_back("\\\\.\\COM" + std::to_string(i));		// Store valid ports into vector
+		}
+	}
+
+	if (GetError() == "INVALID_COM_PORT") ClearErrors();		// Reset errors caused by scanning ports
+
+}

@@ -4,6 +4,7 @@
 
 #include <string>
 #include <windows.h>
+#include <vector>
 
 class ArduinoCOM
 {
@@ -19,10 +20,13 @@ class ArduinoCOM
 		bool ReadLine(std::string *Line);				// Basic functionality
 		void Write();									// Not implemented yet
 		bool WriteLine(std::string *Line);				// Basic functionality
-		bool isConnected();								// Very basic, needs more implementation
+		bool isConnected();								// Very basic, needs more implementation or might not be that useful
 		bool isValidPort(int COMPortNumber);			// Check if the specified COM port is available/valid
-		int BaudRate;
-		char* COMPortName;
+		void ScanPorts();								// Iterate through COM0-COM20 and store valid COM ports in <availablePorts>
+		int BaudRate;									// Default is 9600
+		char* COMPortName;								// Blank by default
+		std::vector<std::string> availablePorts;		// Used after calling ScanPorts() to see what ports are available
+
 		
 	private:
 		DWORD COMError;									// Variable to store the results of the windows GetLastError() as needed

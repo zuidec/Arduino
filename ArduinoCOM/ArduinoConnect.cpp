@@ -6,7 +6,7 @@ using namespace std;
 int main()
 {
 	ArduinoCOM arduino;
-	arduino.COMPortName = "COM6";
+	arduino.COMPortName = "\\\\.\\COM6";
 	arduino.BaudRate = 9600;
 	string line = "";
 	//bool isConnected = false;
