@@ -104,9 +104,45 @@ void ArduinoCOM::ClearErrors()
 	LastError = "";
 }
 
-void ArduinoCOM::Read()
+bool ArduinoCOM::ReadBytes(std::string *Line, int bytesToRead)
 {
-	
+	try
+	{
+		for(int i=0; i< bytesToRead; i++)		// Read one byte at a time until reached bytesToRead number of bytes
+		{
+			if (!ReadFile(SerialPort, &ReadBuffer[i], 1, &bytesRead, NULL))
+			{
+				COMError = GetLastError();
+				i--;
+				switch (COMError)
+				{
+					case ERROR_IO_PENDING:		// We expect to occasionally have IO pending, so ignore
+						break;
+					case ERROR_HANDLE_EOF:		// We expect to occasionally read to the end of the buffer, so ignore
+						break;
+					default:					// For all other errors, we should throw an exception
+						throw COMError;
+						break;
+				}
+			}
+			if (i == (bytesToRead - 1))
+			{
+				for (int j = 0; j <= i; j++)
+				{
+					*Line += ReadBuffer[j];		// Convert buffer into a string to be returned							
+				}
+			}
+		}
+		FlushBuffer(&ReadBuffer[0], sizeof(ReadBuffer));
+	}
+	catch (...) //Catch exceptions caused by ReadFile() and exit
+	{
+		SetError("READ_ERROR " + std::to_string(COMError)); // Output last error and exit 
+		Disconnect();
+		return false;
+	}
+
+	return true;
 }
 
 bool ArduinoCOM::ReadLine(std::string* Line) // Takes a string pointer as argument to store the line to be read
@@ -158,7 +194,56 @@ bool ArduinoCOM::ReadLine(std::string* Line) // Takes a string pointer as argume
 	return true;
 }
 
-void ArduinoCOM::Write()
+bool ArduinoCOM::ReadUntil(std::string* Line, char terminator) // Takes a string pointer as argument to store the line to be read
+{
+	bool EndOfFile = false;		// Create an EOF flag to use in this function
+	try
+	{
+		for (int i = 0; !EndOfFile && i < sizeof(ReadBuffer); i++) // Set up loop to read until \n is found
+		{
+			if (!ReadFile(SerialPort, &ReadBuffer[i], 1, &bytesRead, /*&PortOverlap*/ NULL)) // Read one byte at a time from arduino and store in buffer, ReadFile() returns 0 if there is a failure. Use PortOverlap as last argument for asynchronous IO, NULL for synchronous IO
+			{
+				COMError = GetLastError();
+				i--;
+				switch (COMError)
+				{
+				case ERROR_IO_PENDING:		// We expect to occasionally have IO pending, so ignore
+					break;
+				case ERROR_HANDLE_EOF:		// We expect to occasionally read to the end of the buffer, so ignore
+					break;
+				default:					// For all other errors, we should throw an exception
+					throw COMError;
+					break;
+
+				}
+
+			}
+			if (bytesRead < 1) i--;
+
+			if (ReadBuffer[i] == terminator && i > 0)
+			{
+				EndOfFile = true;				// Set EOF flag if terminating character is reached
+				//std::cout << ReadBuffer;		// Used to debug buffer errors
+				for (int j = 0; j <= i; j++)
+				{
+					*Line += ReadBuffer[j];		// Convert buffer into a string to be returned							
+				}
+				FlushBuffer(&ReadBuffer[0], sizeof(ReadBuffer));		// Send the buffer to be set back to \0 in all positions
+			}
+		}
+
+		EndOfFile = false; // Reset EOF flag
+	}
+	catch (...) //Catch exceptions caused by ReadFile() and exit
+	{
+		SetError("READ_ERROR " + std::to_string(COMError)); // Output last error and exit 
+		Disconnect();
+		return false;
+	}
+	return true;
+}
+
+void ArduinoCOM::Write(std::string *Line, int bytesToWrite)
 {
 	
 }
@@ -185,8 +270,6 @@ bool ArduinoCOM::WriteLine(std::string* Line)
 			switch (COMError)
 			{
 			case ERROR_IO_PENDING:		// We expect to occasionally have IO pending, so ignore
-				break;
-			case ERROR_HANDLE_EOF:		// We expect to occasionally read to the end of the buffer, so ignore
 				break;
 			default:					// For all other errors, we should throw an exception
 				throw COMError;
