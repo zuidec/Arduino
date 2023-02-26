@@ -4,7 +4,7 @@
 import serial
 import time
 
-arduino = serial.Serial(port = 'COM3', timeout=0) #set up object to connect to arduino over COM3
+arduino = serial.Serial(port = 'COM12', timeout=0) #set up object to connect to arduino over COM3
 time.sleep(2)
 
 var = b''        # Initialize variables with the correct type before using in main loop
