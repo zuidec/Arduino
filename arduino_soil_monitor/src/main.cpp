@@ -7,7 +7,7 @@
  */
 
 #include <Arduino.h>
-// SPI and RF24 are needed to interface with NRF24L01 radio module
+// SPI and RF24 are needed to interface with NRF24L01 radio module 
 #include <SPI.h>
 #include <RF24.h>
 // SoilMonitor.h has the functions to read soil sensor and use autowater

@@ -95,7 +95,7 @@ void SoilMonitor::BeginAutoWatering()   {
     uint16_t rawShutoffThreshold = map(autoWaterShutoffThreshold,0,100,minMoistureLevel,maxMoistureLevel);
 
     // The reading value will decrease as the soil becomes more saturated, loop until shutoff threshold is reached
-    while(analogRead(SOILSENSOR_DATA_PIN > rawShutoffThreshold))    {
+    while(analogRead(SOILSENSOR_DATA_PIN) > rawShutoffThreshold)    {
         
         // Drop into another loop to shut off pump and wait if the water level is too high
         if(IsPumpOverflowing())    {
