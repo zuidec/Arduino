@@ -1,7 +1,7 @@
 /*
- *  Arduino library to create an instance of SoilMonitor
- *  to read moisture data and run the auto water feature
- *
+ *  Arduino SoilMonitor library to read 
+ *  moisture data and run the auto water feature
+ * 
  *  Author: Case Zuiderveld
  *  Last updated: 5/8/2023
  */
@@ -92,8 +92,8 @@ void SoilMonitor::BeginAutoWatering()   {
     digitalWrite(PUMP_PWR_PIN, HIGH);
 
     // Map the shutoff threshold to a raw value from its percentage so that it only needs to be calculated once
-    uint16_t rawShutoffThreshold = map(autoWaterShutoffThreshold,0,100,minMoistureLevel,maxMoistureLevel);
-
+    int16_t rawShutoffThreshold = map(autoWaterShutoffThreshold,0,100,minMoistureLevel,maxMoistureLevel);
+    Serial.println(rawShutoffThreshold);
     // The reading value will decrease as the soil becomes more saturated, loop until shutoff threshold is reached
     while(analogRead(SOILSENSOR_DATA_PIN) > rawShutoffThreshold)    {
         

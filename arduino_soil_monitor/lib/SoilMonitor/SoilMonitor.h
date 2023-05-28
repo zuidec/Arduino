@@ -1,6 +1,6 @@
 /*
- *  Arduino library to create an instance of SoilMonitor 
- *  to read moisture data and run the auto water feature
+ *  Arduino SoilMonitor library to read 
+ *  moisture data and run the auto water feature
  * 
  *  Author: Case Zuiderveld
  *  Last updated: 5/8/2023
@@ -10,7 +10,7 @@
 #define SOILMONITOR_H
 
 #define DEFAULT_MIN_MOISTURE                (855)                                           // Default value can be changed with CalibrateSensor()
-#define DEFAULT_MAX_MOISTURE                (500)                                           // Default value can be changed with CalibrateSensor()
+#define DEFAULT_MAX_MOISTURE                (490)                                           // Default value can be changed with CalibrateSensor()
 #define DEFAULT_AUTOWATER_START_THRESHOLD   (35)                                            // Default value can be changed with SetPumpThresholds()
 #define DEFAULT_AUTOWATER_SHUTOFF_THRESHOLD (85)                                            // Default value can be changed with SetPumpThresholds()
 #define SAMPLE_QUANTITY                     (5)                                             // Number of sensor readings to average together
@@ -27,7 +27,7 @@ class SoilMonitor   {
                     uint8_t sensorDataPin);                                               
         ~SoilMonitor();                                                                     //  Not doing anything currently
         void ReadSoilLevel();                                                               //  Reads value and stores a percent value in percentSoilLevel
-        void CalibrateSensor(uint16_t minLevel, uint16_t maxLevel);                                   //  Calibrates sensor with the min/max for different ADC/sensor/boards
+        void CalibrateSensor(uint16_t minLevel, uint16_t maxLevel);                         //  Calibrates sensor with the min/max for different ADC/sensor/boards
         void SetAutoWaterThresholds(uint8_t start, uint8_t shutoff);                        //  Sets when to turn the pump on and off
         void BeginAutoWatering();                                                           //  Called by ReadSoilLevel if auto watering is enabled, handles running the pump until the shutoff threshold is reached
         bool IsPumpOverflowing();                                                           //  Called during autowater function to determine if pot is overflowing
