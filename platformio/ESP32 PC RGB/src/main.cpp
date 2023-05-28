@@ -2,6 +2,8 @@
 #define FASTLED_INTERNAL
 #include <FastLED.h>
 #include "FanFX.h"
+#include <WiFi.h>
+#include <ESP32Ping.h>
 
 #define NUM_LEDS  48
 #define NUM_FANS  4
@@ -12,6 +14,9 @@ uint8_t initialHue = 0;
 uint8_t deltaHue = 4;
 uint8_t hueDensity = 4;
 CRGBPalette16 wayOfKingsPalette;
+WiFiClient client;
+const char *ssid = "TP-Link_5385";
+const char *password = "52957475";
 
 //----------------------{R,   G,    B}
 CRGB WoKLightOrange =   {240, 100,  30};
@@ -19,15 +24,17 @@ CRGB WoKLightBlue =     {124, 160,  198};
 CRGB WoKDarkBlue =      {30,  80,  255};
 
 void fillLEDs(CRGB *LEDsToFill, uint8_t size, CRGB color);
+void initWiFi();
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
+  //initWiFi();
   pinMode(LED_PIN, OUTPUT);
   pinMode(LED_BUILTIN, OUTPUT);
 
   FastLED.addLeds<WS2812B, LED_PIN, GRB>(fanLEDs, NUM_LEDS);               // Add our LED strip to the FastLED library
-  FastLED.setBrightness(128);
+  FastLED.setBrightness(24);
   FastLED.clear();
 }
 
@@ -60,18 +67,19 @@ void loop() {
   }
   */
 
- fillLEDs(&fanLEDs[0], 12, WoKLightOrange);
- fillLEDs(&fanLEDs[7], 3, CRGB::OrangeRed);
- fillLEDs(&fanLEDs[1], 2, WoKLightBlue);
-
- fillLEDs(&fanLEDs[12], 12, WoKLightOrange);
- fillLEDs(&fanLEDs[14], 6, CRGB::OrangeRed);
-
- fillLEDs(&fanLEDs[24], 12, WoKLightBlue);
- fillLEDs(&fanLEDs[26], 7, WoKLightOrange);
-
- fillLEDs(&fanLEDs[36], 12, WoKDarkBlue);
- fillLEDs(&fanLEDs[39], 5, WoKLightBlue);
+  // Back fan
+  fillLEDs(&fanLEDs[0], 12, WoKLightOrange);
+  fillLEDs(&fanLEDs[7], 3, CRGB::OrangeRed);
+  fillLEDs(&fanLEDs[1], 2, WoKLightBlue);
+  // Top fan
+  fillLEDs(&fanLEDs[12], 12, WoKLightOrange);
+  fillLEDs(&fanLEDs[14], 6, CRGB::OrangeRed);
+  // Middle fan
+  fillLEDs(&fanLEDs[24], 12, WoKLightBlue);
+  fillLEDs(&fanLEDs[26], 7, WoKLightOrange);
+  // Bottom fan
+  fillLEDs(&fanLEDs[36], 12, WoKDarkBlue);
+  fillLEDs(&fanLEDs[39], 5, WoKLightBlue);
  
  /*
  for(int i=0; i<NUM_LEDS;i++) {
@@ -114,7 +122,9 @@ void loop() {
  }
   */
   FastLED.show();
+ 
   
+  //delay(1000);
 }
 
 void fillLEDs(CRGB *LEDsToFill, uint8_t size, CRGB color) {
@@ -122,4 +132,15 @@ void fillLEDs(CRGB *LEDsToFill, uint8_t size, CRGB color) {
   {
     LEDsToFill[i] = color;
   }
+}
+
+void initWiFi() {
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  Serial.println("Connecting to WiFi ..");
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print('.');
+    delay(1000);
+  }
+  Serial.println(WiFi.localIP());
 }
