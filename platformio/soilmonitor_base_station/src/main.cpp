@@ -1,29 +1,46 @@
+/*
+ *  ESP32 app to receive soil moisture data
+ *  then transmit to an online database
+ * 
+ *  Author: Case Zuiderveld
+ *  Last updated 5/28/2023
+ */
+
 #include <Arduino.h>
+// RF24 and SPI for radio communication
 #include <RF24.h>
-#include <nRF24L01.h>
 #include <SPI.h>
+// WiFi and HTTPClient for transmitting soil levels to the database
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include "wifiFix.h"    // Needed to fix a bug with the WiFi library
+// FastLED for onboard RGB LED control
+#include <FastLED.h>
+// PlantPacket for using ParsePlantPacket()
+#include "PlantPacket.h"
 
+// Define physical pin layout
 #define NRF24L01_MOSI_PIN     (6)
 #define NRF24L01_MISO_PIN     (5)
 #define NRF24L01_SCK_PIN      (4)
 #define NRF24L01_CSN_PIN      (10)
 #define NRF24L01_CE_PIN       (7)
+#define LED_PIN               (8)
+
 #define BUFFER_LENGTH         16
+#define NUM_LEDS              1
 
 // Objects
 RF24 radio(NRF24L01_CE_PIN, NRF24L01_CSN_PIN);
-struct PlantPacket  {
-  char plantName[15];
-  uint8_t percentSoilLevel;
-};
+PlantPacket packet;
+WiFiClient* client = new WiFiClientFixed();
+CRGB led[NUM_LEDS] = {0};
 
 // Variables
 uint8_t baseStationAddress[5] = {'b','a','s','e','\0'};
 const char* ssid              = "TP-Link_5385";
 const char* password          = "52957475";
-const char* serverName        = "http://192.168.0.22/soil_monitor/post_esp_data.php";
+const char* serverName        = "http://casetopher.me/soil_monitor/post_esp_data.php";
 const char* plantName[6]      = {"oliver", "lily", "gustav", "thumbelina", "ivy", "champ"};
 String apiKeyValue            = "tPmAT5Ab3j7F9";
 uint8_t buffer[BUFFER_LENGTH]    = {"\0"};
@@ -32,10 +49,12 @@ uint8_t buffer[BUFFER_LENGTH]    = {"\0"};
 bool InitializeRadio();
 bool InitializeWifi();
 bool UpdateMoistureDatabase(const char* plantName, int percentMoisture);
-void ParsePlantPacket(uint8_t *buffer, int bufferLength, PlantPacket *packet);
 void ClearBuffer(uint8_t *buffer, int bufferLength);
+void SetLEDColor(CRGB color);
 
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+//
+//
+//
 void setup() {
 
   Serial.begin(115200);
@@ -46,6 +65,11 @@ void setup() {
   if(!InitializeWifi()) {
     Serial.println("Failed to initialize WiFi");
   }
+  // Initialize onboard status LED
+  FastLED.addLeds<WS2812B, LED_PIN, GRB>(led, NUM_LEDS);
+  FastLED.setBrightness(24);
+  // Set LED once setup is complete
+  SetLEDColor(CRGB::Green);
   Serial.println("Waiting for plant packets....");
 }
 
@@ -53,13 +77,12 @@ void loop() {
   
   if(radio.available()) {
     radio.read(&buffer, sizeof(buffer));
-    PlantPacket packet;
-    ParsePlantPacket(&buffer[0], BUFFER_LENGTH, &packet);
+    packet.ParsePlantPacket(&buffer[0]);
     ClearBuffer(&buffer[0], BUFFER_LENGTH);
     Serial.print(packet.plantName);
     Serial.println(packet.percentSoilLevel); 
 
-   // UpdateMoistureDatabase(packet.plantName, (int)packet.percentSoilLevel);
+   UpdateMoistureDatabase(packet.plantName, (int)packet.percentSoilLevel);
   }
 
 }
@@ -115,15 +138,15 @@ bool UpdateMoistureDatabase(const char* plantName, int percentMoisture) {
     WiFi.reconnect();
     delay(5000);
     if(WiFi.status() != WL_CONNECTED) {
+      SetLEDColor(CRGB::Red);
       return false;
     }
   }
     
-  WiFiClient client;
   HTTPClient http;
 
   // Create http client to connect to server
-  http.begin(client, serverName);
+  http.begin(*client, serverName);
   http.addHeader("Content-Type","application/x-www-form-urlencoded");
 
   // Set up a string with our post request
@@ -151,18 +174,6 @@ bool UpdateMoistureDatabase(const char* plantName, int percentMoisture) {
 
 }
 
-void ParsePlantPacket(uint8_t *buffer, int bufferLength, PlantPacket *packet)  {
-
-  // Move plantname from buffer to packet one char at a time
-  for(int i= 0; i < (bufferLength-1); i++)  {
-    packet->plantName[i] = (char)buffer[i];
-  }
-
-  // Take the last byte of the buffer and move to the packet for soil level
-  packet->percentSoilLevel = buffer[bufferLength];
-
-  return;
-}
 
 void ClearBuffer(uint8_t *buffer, int bufferLength) {
 
@@ -171,4 +182,10 @@ void ClearBuffer(uint8_t *buffer, int bufferLength) {
   }
 
   return;
+}
+
+void SetLEDColor(CRGB color)  {
+  FastLED.clear();
+  led[0] = color;
+  FastLED.show();
 }
