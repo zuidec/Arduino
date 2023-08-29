@@ -8,30 +8,26 @@
 #define NUM_LEDS  48
 #define NUM_FANS  4
 #define LED_PIN   10
+#define PC_POWER_PIN 4
 
 CRGB fanLEDs[NUM_LEDS] = {0};
-uint8_t initialHue = 0;
-uint8_t deltaHue = 4;
-uint8_t hueDensity = 4;
-CRGBPalette16 wayOfKingsPalette;
-WiFiClient client;
-const char *ssid = "TP-Link_5385";
-const char *password = "52957475";
 
 //----------------------{R,   G,    B}
 CRGB WoKLightOrange =   {240, 100,  30};
-CRGB WoKLightBlue =     {124, 160,  198};
+CRGB WoKLightBlue =     {124, 160, 198};
 CRGB WoKDarkBlue =      {30,  80,  255};
 
 void fillLEDs(CRGB *LEDsToFill, uint8_t size, CRGB color);
-void initWiFi();
+void FanLEDOn();
+void FanLEDOff();
+
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-  //initWiFi();
   pinMode(LED_PIN, OUTPUT);
   pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(PC_POWER_PIN, INPUT);
 
   FastLED.addLeds<WS2812B, LED_PIN, GRB>(fanLEDs, NUM_LEDS);               // Add our LED strip to the FastLED library
   FastLED.setBrightness(24);
@@ -39,34 +35,31 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+ 
+  if(digitalRead(PC_POWER_PIN)==HIGH) {
+
+    FanLEDOn();
+    Serial.println("HIGH");
+  }
+  else  {
+    FanLEDOff();
+    Serial.println("LOW");
+  }
+  delay(1000);
+  //FanLEDOn();
+  //FanLEDOff();
   
-  /*
-  for(int i=0;i<NUM_LEDS;i++)
-  {
-    fanLEDs[i] = CRGB::Aquamarine;
-    FastLED.show();
-    if(i%12==0)  {
-      delay(1000);
-    }
-    else  {
-      delay(200);
-    }
-  }
+  //delay(1000);
+}
 
-  for(int i=0;i<NUM_LEDS;i++)
+void fillLEDs(CRGB *LEDsToFill, uint8_t size, CRGB color) {
+  for(int i=0;i<size;i++)
   {
-    fanLEDs[i] = CRGB::Red;
-    FastLED.show();
-    if(i%12==0)  {
-      delay(1000);
-    }
-    else  {
-      delay(200);
-    }
+    LEDsToFill[i] = color;
   }
-  */
+}
 
+void FanLEDOn() {
   // Back fan
   fillLEDs(&fanLEDs[0], 12, WoKLightOrange);
   fillLEDs(&fanLEDs[7], 3, CRGB::OrangeRed);
@@ -81,66 +74,10 @@ void loop() {
   fillLEDs(&fanLEDs[36], 12, WoKDarkBlue);
   fillLEDs(&fanLEDs[39], 5, WoKLightBlue);
  
- /*
- for(int i=0; i<NUM_LEDS;i++) {
-  if(i%1==0) {
-    fanLEDs[i] = CRGB::Blue; 
-  }
-  if(i%2==0) {
-    fanLEDs[i] = CRGB::Red; 
-  }
-  if(i%3==0) {
-    fanLEDs[i] = CRGB::Green; 
-  }
-  if(i%4==0) {
-    fanLEDs[i] = CRGB::Blue; 
-  }
-  if(i%5==0) {
-    fanLEDs[i] = CRGB::Red; 
-  }
-  if(i%6==0) {
-    fanLEDs[i] = CRGB::Green; 
-  }
-  if(i%7==0) {
-    fanLEDs[i] = CRGB::Blue; 
-  }
-  if(i%8==0) {
-    fanLEDs[i] = CRGB::Red; 
-  }
-  if(i%9==0) {
-    fanLEDs[i] = CRGB::Green; 
-  }
-  if(i%10==0) {
-    fanLEDs[i] = CRGB::Blue; 
-  }
-  if(i%11==0) {
-    fanLEDs[i] = CRGB::Red; 
-  }
-  if(i%12==0) {
-    fanLEDs[i] = CRGB::Green; 
-  }
- }
-  */
   FastLED.show();
- 
-  
-  //delay(1000);
 }
 
-void fillLEDs(CRGB *LEDsToFill, uint8_t size, CRGB color) {
-  for(int i=0;i<size;i++)
-  {
-    LEDsToFill[i] = color;
-  }
-}
-
-void initWiFi() {
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  Serial.println("Connecting to WiFi ..");
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial.print('.');
-    delay(1000);
-  }
-  Serial.println(WiFi.localIP());
+void FanLEDOff()  {
+  fillLEDs(&fanLEDs[0], NUM_LEDS, CRGB::Black);
+  FastLED.show();
 }
