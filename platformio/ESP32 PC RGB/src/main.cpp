@@ -1,13 +1,10 @@
 #include <Arduino.h>
 #define FASTLED_INTERNAL
 #include <FastLED.h>
-#include "FanFX.h"
-#include <WiFi.h>
-#include <ESP32Ping.h>
 
 #define NUM_LEDS  48
 #define NUM_FANS  4
-#define LED_PIN   10
+#define LED_PIN   11
 #define PC_POWER_PIN 4
 
 CRGB fanLEDs[NUM_LEDS] = {0};
@@ -25,6 +22,7 @@ void FanLEDOff();
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
+  Serial.println(F("Serial initialized at 115200"));
   pinMode(LED_PIN, OUTPUT);
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(PC_POWER_PIN, INPUT);
@@ -32,10 +30,11 @@ void setup() {
   FastLED.addLeds<WS2812B, LED_PIN, GRB>(fanLEDs, NUM_LEDS);               // Add our LED strip to the FastLED library
   FastLED.setBrightness(24);
   FastLED.clear();
+  FanLEDOn();
 }
 
 void loop() {
- 
+ /*
   if(digitalRead(PC_POWER_PIN)==HIGH) {
 
     FanLEDOn();
@@ -46,7 +45,8 @@ void loop() {
     Serial.println("LOW");
   }
   delay(1000);
-  //FanLEDOn();
+  */
+  
   //FanLEDOff();
   
   //delay(1000);
