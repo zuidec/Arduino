@@ -18,6 +18,7 @@
 #include <FastLED.h>
 // PlantPacket for using ParsePlantPacket()
 #include "PlantPacket.h"
+#include "credentials.h"
 
 // Define physical pin layout
 #define NRF24L01_MOSI_PIN     (6)
@@ -38,11 +39,7 @@ CRGB led[NUM_LEDS] = {0};
 
 // Variables
 uint8_t baseStationAddress[5] = {'b','a','s','e','\0'};
-const char* ssid              = "TP-Link_5385";
-const char* password          = "52957475";
-const char* serverName        = "http://casetopher.me/soil_monitor/post_esp_data.php";
 const char* plantName[6]      = {"oliver", "lily", "gustav", "thumbelina", "ivy", "champ"};
-String apiKeyValue            = "tPmAT5Ab3j7F9";
 uint8_t buffer[BUFFER_LENGTH]    = {"\0"};
 
 // Functions
@@ -65,6 +62,14 @@ void setup() {
   if(!InitializeWifi()) {
     Serial.println("Failed to initialize WiFi");
   }
+  Serial.print("ssid: ");
+  Serial.print(ssid);
+  Serial.print("  password: ");
+  Serial.print(password);
+  Serial.print("  server name: ");
+  Serial.print(serverName);
+  Serial.print("  api key: ");
+  Serial.println(apiKeyValue);
   // Initialize onboard status LED
   FastLED.addLeds<WS2812B, LED_PIN, GRB>(led, NUM_LEDS);
   FastLED.setBrightness(24);
@@ -131,7 +136,7 @@ bool InitializeWifi() {
   return true;
 }
 
-bool UpdateMoistureDatabase(const char* plantName, int percentMoisture) {
+bool UpdateMoistureDatabase(const char* plant, int percentMoisture) {
   
   // Check if WiFi is connected and attempt one reconnect if it isn't
   if(WiFi.status() != WL_CONNECTED) {
@@ -150,7 +155,7 @@ bool UpdateMoistureDatabase(const char* plantName, int percentMoisture) {
   http.addHeader("Content-Type","application/x-www-form-urlencoded");
 
   // Set up a string with our post request
-  String httpRequestData = "api_key=" + apiKeyValue + "&moisture=" + percentMoisture + "%&plantname=" + plantName + "";
+  String httpRequestData = "api_key=" +  apiKeyValue + "&moisture=" + percentMoisture + "%&plantname=" + plant + "";
   Serial.print("httpRequestData: ");
   Serial.println(httpRequestData);
 
@@ -161,7 +166,7 @@ bool UpdateMoistureDatabase(const char* plantName, int percentMoisture) {
     Serial.print("HTTP Response code: ");
     Serial.println(httpResponseCode);
     http.end();
-
+    SetLEDColor(CRGB::Green);
     return true;
   }
   else {
