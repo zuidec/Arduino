@@ -1,7 +1,8 @@
 # Arduino README.md
 
 ## sketches/
-Contains very basic sketches demonstrating how to get peripherals working.
+Contains very basic sketches demonstrating how to get peripherals working using Arduino IDE.
 
-## board_pinouts_schematics/
-Contains relevant datasheets and diagrams for arduino devices and sensors.
+## platformio/
+Contains basic proof-of-concept projects using platformio
+
